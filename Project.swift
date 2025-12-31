@@ -13,11 +13,7 @@ let project = Project(
             product: .app,
             bundleId: "com.kokiTakashiki.Daroku",
             deploymentTargets: .macOS("26.0"),
-            infoPlist: .extendingDefault(with: [
-                "NSMainNibFile": "MainMenu",
-                "NSMainStoryboardFile": "",
-                "NSPrincipalClass": "NSApplication",
-            ]),
+            infoPlist: .extendingDefault(with: [:]),
             sources: ["Daroku/**"],
             resources: [
                 "Daroku/Assets.xcassets",
