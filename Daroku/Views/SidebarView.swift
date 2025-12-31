@@ -33,12 +33,6 @@ struct SidebarView: View {
                                 Text("単位: \(software.unit ?? "点")")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                if let url = software.url, !url.isEmpty {
-                                    Text(url)
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                        .lineLimit(1)
-                                }
                             }
                         }
                     }
@@ -103,7 +97,6 @@ struct SidebarView: View {
             software.id = UUID()
             software.name = newSoftwareName
             software.unit = newSoftwareUnit.isEmpty ? "点" : newSoftwareUnit
-            software.url = newSoftwareURL.isEmpty ? nil : newSoftwareURL
             software.createdAt = Date()
 
             do {
