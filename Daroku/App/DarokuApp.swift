@@ -20,6 +20,12 @@ struct DarokuApp: App {
         .commands {
             SidebarCommands()
             ToolbarCommands()
+            CommandGroup(replacing: .help) {
+                Button("打録 ヘルプ") {
+                    HelpView.openWindow()
+                }
+                .keyboardShortcut("?", modifiers: .command)
+            }
         }
     }
 }

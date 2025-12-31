@@ -25,15 +25,11 @@ struct SidebarView: View {
             Section("タイピングソフト") {
                 ForEach(softwares) { software in
                     NavigationLink(value: software) {
-                        HStack {
-                            Image(systemName: "keyboard")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(software.name ?? "名称未設定")
+                            Text("単位: \(software.unit ?? "点")")
+                                .font(.caption)
                                 .foregroundStyle(.secondary)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(software.name ?? "名称未設定")
-                                Text("単位: \(software.unit ?? "点")")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
                         }
                     }
                     .contextMenu {
