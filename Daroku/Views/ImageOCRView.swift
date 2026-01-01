@@ -218,7 +218,7 @@ struct ImageOCRView: View {
         do {
             recognizedTexts = try await ocrService.recognizeText(from: image)
             if recognizedTexts.isEmpty {
-                errorMessage = "テキストが見つかりませんでした"
+                errorMessage = String(localized: "テキストが見つかりませんでした")
             }
         } catch {
             errorMessage = error.localizedDescription

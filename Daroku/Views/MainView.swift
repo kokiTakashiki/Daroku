@@ -40,7 +40,7 @@ struct MainView: View {
                         systemImage: "keyboard",
                         description: Text("左のサイドバーからタイピングソフトを選択するか、新規作成してください")
                     )
-                    .navigationTitle("⌨️打録")
+                    .navigationTitle(String(localized: "⌨️打録"))
                 }
             }
             .frame(minWidth: 900, minHeight: 600)
@@ -67,7 +67,7 @@ private struct SoftwareDetailView: View {
         let title = if let name = software.name {
             name
         } else {
-            "名称未設定"
+            String(localized: "名称未設定")
         }
         VStack(spacing: 0) {
             header()
@@ -87,7 +87,7 @@ private struct SoftwareDetailView: View {
     private func header() -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("単位: \(software.unit ?? "点")")
+                Text("単位: \(software.unit ?? String(localized: "点"))")
                     .font(.caption2)
                 if let url = software.url, !url.isEmpty {
                     HStack(spacing: 4) {
@@ -256,7 +256,7 @@ struct FooterView: View {
             backing: .buffered,
             defer: false
         )
-        tipWindow.title = "開発者を支援"
+        tipWindow.title = String(localized: "開発者を支援")
         tipWindow.center()
         tipWindow.contentView = NSHostingView(rootView: TipView())
         tipWindow.makeKeyAndOrderFront(nil)
@@ -280,8 +280,9 @@ struct HelpView: View {
     /// ヘルプウィンドウを開く（既に開いている場合は前面に表示）
     @MainActor
     static func openWindow() {
+        let helpTitle = String(localized: "ヘルプ")
         // 既存のヘルプウィンドウがあれば前面に表示
-        for window in NSApplication.shared.windows where window.title == "ヘルプ" {
+        for window in NSApplication.shared.windows where window.title == helpTitle {
             window.makeKeyAndOrderFront(nil)
             return
         }
@@ -293,7 +294,7 @@ struct HelpView: View {
             backing: .buffered,
             defer: false
         )
-        helpWindow.title = "ヘルプ"
+        helpWindow.title = helpTitle
         helpWindow.center()
         helpWindow.contentView = NSHostingView(rootView: HelpView())
         helpWindow.makeKeyAndOrderFront(nil)
@@ -441,7 +442,7 @@ class TipStore: ObservableObject {
                     await transaction.finish()
                     purchaseState = .purchased
                 case .unverified:
-                    purchaseState = .failed("購入の検証に失敗しました")
+                    purchaseState = .failed(String(localized: "購入の検証に失敗しました"))
                 }
             case .userCancelled:
                 purchaseState = .ready
@@ -575,9 +576,9 @@ struct TipButton: View {
 
     private var tipLabel: String {
         switch product.id {
-        case TipProducts.smallTip: "小さなチップ"
-        case TipProducts.mediumTip: "ちょうどいいチップ"
-        case TipProducts.largeTip: "大きなチップ"
+        case TipProducts.smallTip: String(localized: "小さなチップ")
+        case TipProducts.mediumTip: String(localized: "ちょうどいいチップ")
+        case TipProducts.largeTip: String(localized: "大きなチップ")
         default: product.displayName
         }
     }

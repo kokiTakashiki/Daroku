@@ -67,7 +67,7 @@ struct RecordFormView: View {
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 100)
                         .multilineTextAlignment(.trailing)
-                    Text(software.unit ?? "点")
+                    Text(software.unit ?? String(localized: "点"))
                         .foregroundStyle(.secondary)
                 }
             }

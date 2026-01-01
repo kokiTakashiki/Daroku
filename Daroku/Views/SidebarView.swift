@@ -17,7 +17,7 @@ struct SidebarView: View {
 
     @State private var showingAddSheet = false
     @State private var newSoftwareName = ""
-    @State private var newSoftwareUnit = "点"
+    @State private var newSoftwareUnit = ""
     @State private var newSoftwareURL = ""
 
     var body: some View {
@@ -26,8 +26,8 @@ struct SidebarView: View {
                 ForEach(softwares) { software in
                     NavigationLink(value: software) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(software.name ?? "名称未設定")
-                            Text("単位: \(software.unit ?? "点")")
+                            Text(software.name ?? String(localized: "名称未設定"))
+                            Text("単位: \(software.unit ?? String(localized: "点"))")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -92,7 +92,7 @@ struct SidebarView: View {
             let software = TypingSoftware(context: viewContext)
             software.id = UUID()
             software.name = newSoftwareName
-            software.unit = newSoftwareUnit.isEmpty ? "点" : newSoftwareUnit
+            software.unit = newSoftwareUnit.isEmpty ? String(localized: "点") : newSoftwareUnit
             software.createdAt = Date()
 
             do {
@@ -108,7 +108,7 @@ struct SidebarView: View {
 
     private func resetForm() {
         newSoftwareName = ""
-        newSoftwareUnit = "点"
+        newSoftwareUnit = ""
         newSoftwareURL = ""
     }
 

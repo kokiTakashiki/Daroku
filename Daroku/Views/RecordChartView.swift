@@ -7,12 +7,21 @@ import Charts
 import SwiftUI
 
 enum ChartMetric: String, CaseIterable, Identifiable {
-    case score = "スコア"
-    case correctKeys = "正確キー数"
-    case mistypes = "ミスタイプ"
-    case avgKeysPerSec = "平均速度"
+    case score
+    case correctKeys
+    case mistypes
+    case avgKeysPerSec
 
     var id: String { rawValue }
+
+    var localizedName: String {
+        switch self {
+        case .score: String(localized: "スコア")
+        case .correctKeys: String(localized: "正確キー数")
+        case .mistypes: String(localized: "ミスタイプ")
+        case .avgKeysPerSec: String(localized: "平均速度")
+        }
+    }
 
     var color: Color {
         switch self {
@@ -26,9 +35,9 @@ enum ChartMetric: String, CaseIterable, Identifiable {
     var unit: String {
         switch self {
         case .score: ""
-        case .correctKeys: "回"
-        case .mistypes: "回"
-        case .avgKeysPerSec: "回/秒"
+        case .correctKeys: String(localized: "回")
+        case .mistypes: String(localized: "回")
+        case .avgKeysPerSec: String(localized: "回/秒")
         }
     }
 }
@@ -53,7 +62,7 @@ struct RecordChartView: View {
         records.compactMap { record in
             guard let date = record.date else { return nil }
             let value = getValue(for: metric, from: record)
-            return ChartDataPoint(date: date, value: value, metric: metric.rawValue)
+            return ChartDataPoint(date: date, value: value, metric: metric.localizedName)
         }
     }
 
@@ -96,7 +105,7 @@ struct RecordChartView: View {
                         Circle()
                             .fill(metric.color)
                             .frame(width: 8, height: 8)
-                        Text(metric.rawValue)
+                        Text(metric.localizedName)
                     }
                 }
                 .toggleStyle(.button)
@@ -129,10 +138,10 @@ struct RecordChartView: View {
             .foregroundStyle(by: .value("指標", dataPoint.metric))
         }
         .chartForegroundStyleScale([
-            ChartMetric.score.rawValue: ChartMetric.score.color,
-            ChartMetric.correctKeys.rawValue: ChartMetric.correctKeys.color,
-            ChartMetric.mistypes.rawValue: ChartMetric.mistypes.color,
-            ChartMetric.avgKeysPerSec.rawValue: ChartMetric.avgKeysPerSec.color,
+            ChartMetric.score.localizedName: ChartMetric.score.color,
+            ChartMetric.correctKeys.localizedName: ChartMetric.correctKeys.color,
+            ChartMetric.mistypes.localizedName: ChartMetric.mistypes.color,
+            ChartMetric.avgKeysPerSec.localizedName: ChartMetric.avgKeysPerSec.color,
         ])
         .chartLegend(position: .bottom)
         .chartXAxis {
@@ -151,7 +160,7 @@ struct RecordChartView: View {
 
     private var statisticsSummary: some View {
         HStack(spacing: 24) {
-            ForEach(Array(selectedMetrics).sorted(by: { $0.rawValue < $1.rawValue })) { metric in
+            ForEach(Array(selectedMetrics).sorted(by: { $0.localizedName < $1.localizedName })) { metric in
                 let values = records.map { getValue(for: metric, from: $0) }
                 let avg = values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
                 let maxVal = values.max() ?? 0
@@ -162,14 +171,14 @@ struct RecordChartView: View {
                         Circle()
                             .fill(metric.color)
                             .frame(width: 8, height: 8)
-                        Text(metric.rawValue)
+                        Text(metric.localizedName)
                             .font(.headline)
                     }
 
                     HStack(spacing: 16) {
-                        StatItem(label: "平均", value: formatValue(avg, metric: metric))
-                        StatItem(label: "最高", value: formatValue(maxVal, metric: metric))
-                        StatItem(label: "最低", value: formatValue(minVal, metric: metric))
+                        StatItem(label: String(localized: "平均"), value: formatValue(avg, metric: metric))
+                        StatItem(label: String(localized: "最高"), value: formatValue(maxVal, metric: metric))
+                        StatItem(label: String(localized: "最低"), value: formatValue(minVal, metric: metric))
                     }
                 }
                 .padding()
@@ -191,7 +200,7 @@ struct RecordChartView: View {
     }
 
     private func formatValue(_ value: Double, metric: ChartMetric) -> String {
-        let unit = metric == .score ? (software.unit ?? "点") : metric.unit
+        let unit = metric == .score ? (software.unit ?? String(localized: "点")) : metric.unit
         if metric == .avgKeysPerSec {
             return String(format: "%.1f %@", value, unit)
         }

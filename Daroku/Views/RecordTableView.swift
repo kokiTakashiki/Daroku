@@ -32,7 +32,7 @@ struct RecordTableView: View {
                 .width(min: 120, ideal: 150)
 
                 TableColumn("スコア") { record in
-                    Text("\(Int(record.score)) \(software.unit ?? "点")")
+                    Text("\(Int(record.score)) \(software.unit ?? String(localized: "点"))")
                         .monospacedDigit()
                 }
                 .width(min: 80, ideal: 100)
