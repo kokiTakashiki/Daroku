@@ -28,7 +28,7 @@ final class PersistenceController: Sendable {
         } catch {
             logger.error("Failed to initialize PersistenceController: \(error.localizedDescription, privacy: .public)")
             // エラーが発生した場合でも、メモリ内ストアでフォールバック
-            return makeInMemoryController(context: "shared")
+            return makeInMemoryController(errorContext: "shared")
         }
     }()
 
@@ -83,19 +83,19 @@ final class PersistenceController: Sendable {
     }
 
     /// メモリ内ストアで永続化コントローラーを作成する。失敗した場合は再試行する
-    /// - Parameter context: エラーメッセージに使用するコンテキスト文字列
+    /// - Parameter errorContext: エラーメッセージに使用するコンテキスト文字列
     /// - Returns: 初期化された永続化コントローラー
-    private static func makeInMemoryController(context: String) -> PersistenceController {
+    private static func makeInMemoryController(errorContext: String) -> PersistenceController {
         do {
             return try PersistenceController(inMemory: true)
         } catch {
-            logger.error("Failed to create PersistenceController (\(context)): \(error.localizedDescription, privacy: .public)")
+            logger.error("Failed to create PersistenceController (\(errorContext)): \(error.localizedDescription, privacy: .public)")
             // 再試行
             do {
                 return try PersistenceController(inMemory: true)
             } catch {
-                logger.error("Failed to create PersistenceController (\(context)) on retry: \(error.localizedDescription, privacy: .public)")
-                fatalError("Failed to create PersistenceController (\(context)) after retry: \(error.localizedDescription)")
+                logger.error("Failed to create PersistenceController (\(errorContext)) on retry: \(error.localizedDescription, privacy: .public)")
+                fatalError("Failed to create PersistenceController (\(errorContext)) after retry: \(error.localizedDescription)")
             }
         }
     }
@@ -104,7 +104,7 @@ final class PersistenceController: Sendable {
 
     /// A preview instance of `PersistenceController` with sample data for SwiftUI previews.
     static var preview: PersistenceController = {
-        let controller = makeInMemoryController(context: "preview")
+        let controller = makeInMemoryController(errorContext: "preview")
         let context = controller.container.viewContext
 
         // サンプルデータを作成

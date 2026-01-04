@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+/// タイピング練習の記録を管理するmacOSアプリケーションのエントリーポイント
 @main
 struct DarokuApp: App {
     let persistenceController = PersistenceController.shared

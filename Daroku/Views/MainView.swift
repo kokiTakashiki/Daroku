@@ -9,6 +9,7 @@ import SwiftUI
 
 // MARK: - AppLinks
 
+/// アプリケーションの外部リンクを管理する列挙型
 enum AppLinks {
     static let followURL = "https://twitter.com/bluewhitered123"
     // static let appStoreID = ""
@@ -16,6 +17,7 @@ enum AppLinks {
 
 // MARK: - TipProducts
 
+/// チップ購入用の商品IDを管理する列挙型
 enum TipProducts {
     static let smallTip = "com.daroku.tip.small"
     static let mediumTip = "com.daroku.tip.medium"
@@ -74,7 +76,7 @@ private struct SoftwareDetailView: View {
             String(localized: "名称未設定")
         }
         VStack(spacing: 0) {
-            makeHeader()
+            header
 
             Divider()
 
@@ -88,9 +90,8 @@ private struct SoftwareDetailView: View {
         .navigationTitle(title)
     }
 
-    /// ヘッダービューを構築する
-    /// - Returns: ソフトウェア情報と表示切り替えピッカーを含むヘッダービュー
-    private func makeHeader() -> some View {
+    /// ソフトウェア情報と表示切り替えピッカーを含むヘッダービュー
+    private var header: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("単位: \(software.unit ?? String(localized: "点"))")

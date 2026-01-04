@@ -139,6 +139,11 @@ struct ImageOCRView: View {
         .frame(maxHeight: .infinity)
     }
 
+    /// 認識されたテキストの行を表示するビュー
+    /// - Parameters:
+    ///   - text: 表示するテキスト
+    ///   - index: テキストのインデックス
+    /// - Returns: テキスト行を含むビュー
     private func recognizedTextRow(text: String, index: Int) -> some View {
         Button {
             copyText(text, at: index)

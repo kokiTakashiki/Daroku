@@ -17,8 +17,10 @@ enum ChartMetric: String, CaseIterable, Identifiable {
     /// 平均キータイプ数（回/秒）
     case avgKeysPerSec
 
+    /// 一意の識別子。rawValueと同じ値
     var id: String { rawValue }
 
+    /// ローカライズされた指標名
     var localizedName: String {
         switch self {
         case .score: String(localized: "スコア")
@@ -28,6 +30,7 @@ enum ChartMetric: String, CaseIterable, Identifiable {
         }
     }
 
+    /// グラフで使用する指標の色
     var color: Color {
         switch self {
         case .score: .blue
@@ -37,6 +40,7 @@ enum ChartMetric: String, CaseIterable, Identifiable {
         }
     }
 
+    /// 指標の単位（例：「回」「回/秒」）
     var unit: String {
         switch self {
         case .score: ""
@@ -49,9 +53,13 @@ enum ChartMetric: String, CaseIterable, Identifiable {
 
 /// グラフのデータポイント
 struct ChartDataPoint: Identifiable {
+    /// 一意の識別子
     let id = UUID()
+    /// データポイントの日時
     let date: Date
+    /// データポイントの値
     let value: Double
+    /// 指標名
     let metric: String
 }
 
@@ -145,6 +153,7 @@ struct RecordChartView: View {
         }
     }
 
+    /// 統計情報のサマリービュー。各指標の平均、最高、最低値を表示する
     private var statisticsSummary: some View {
         HStack(spacing: 24) {
             ForEach(ChartMetric.allCases) { metric in
@@ -163,9 +172,9 @@ struct RecordChartView: View {
                     }
 
                     HStack(spacing: 16) {
-                        StatItem(label: String(localized: "平均"), value: formatValue(avg, metric: metric))
-                        StatItem(label: String(localized: "最高"), value: formatValue(maxVal, metric: metric))
-                        StatItem(label: String(localized: "最低"), value: formatValue(minVal, metric: metric))
+                        StatItem(label: String(localized: "平均"), value: formatValue(avg, for: metric))
+                        StatItem(label: String(localized: "最高"), value: formatValue(maxVal, for: metric))
+                        StatItem(label: String(localized: "最低"), value: formatValue(minVal, for: metric))
                     }
                 }
                 .padding()
@@ -196,7 +205,7 @@ struct RecordChartView: View {
     ///   - value: フォーマットする値
     ///   - metric: 値の指標
     /// - Returns: フォーマットされた文字列
-    private func formatValue(_ value: Double, metric: ChartMetric) -> String {
+    private func formatValue(_ value: Double, for metric: ChartMetric) -> String {
         let unit = metric == .score ? (software.unit ?? String(localized: "点")) : metric.unit
         if metric == .avgKeysPerSec {
             return String(format: "%.1f %@", value, unit)
@@ -207,7 +216,9 @@ struct RecordChartView: View {
 
 /// 統計情報の表示コンポーネント
 struct StatItem: View {
+    /// ラベルテキスト
     let label: String
+    /// 値のテキスト
     let value: String
 
     var body: some View {
