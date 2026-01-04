@@ -51,7 +51,6 @@ struct ChartDataPoint: Identifiable {
 
 struct RecordChartView: View {
     @ObservedObject var software: TypingSoftware
-    @State private var selectedMetrics: Set<ChartMetric> = [.score]
 
     private var records: [Record] {
         let recordSet = software.records as? Set<Record> ?? []
@@ -76,7 +75,6 @@ struct RecordChartView: View {
                 )
             } else {
                 VStack(alignment: .leading, spacing: 16) {
-                    metricSelector
                     chartSection
                     statisticsSummary
                 }
@@ -85,82 +83,59 @@ struct RecordChartView: View {
         .background(Color(nsColor: .controlBackgroundColor))
     }
 
-    private var metricSelector: some View {
-        HStack {
-            Text("表示する指標:")
-                .foregroundStyle(.secondary)
-
-            ForEach(ChartMetric.allCases) { metric in
-                Toggle(isOn: Binding(
-                    get: { selectedMetrics.contains(metric) },
-                    set: { isOn in
-                        if isOn {
-                            selectedMetrics.insert(metric)
-                        } else if selectedMetrics.count > 1 {
-                            selectedMetrics.remove(metric)
-                        }
-                    }
-                )) {
-                    HStack(spacing: 4) {
-                        Circle()
-                            .fill(metric.color)
-                            .frame(width: 8, height: 8)
-                        Text(metric.localizedName)
-                    }
-                }
-                .toggleStyle(.button)
-                .buttonStyle(.bordered)
-                .tint(selectedMetrics.contains(metric) ? metric.color : .secondary)
-            }
-
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.top)
-    }
-
     @ViewBuilder
     private var chartSection: some View {
-        let allData = selectedMetrics.flatMap { chartData(for: $0) }
+        ScrollView {
+            LazyVStack(spacing: 24) {
+                ForEach(ChartMetric.allCases) { metric in
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(metric.color)
+                                .frame(width: 8, height: 8)
+                            Text(metric.localizedName)
+                                .font(.headline)
+                            Spacer()
+                        }
+                        .padding(.horizontal)
 
-        Chart(allData) { dataPoint in
-            LineMark(
-                x: .value("日時", dataPoint.date),
-                y: .value("値", dataPoint.value)
-            )
-            .foregroundStyle(by: .value("指標", dataPoint.metric))
-            .interpolationMethod(.catmullRom)
+                        Chart(chartData(for: metric)) { dataPoint in
+                            LineMark(
+                                x: .value("日時", dataPoint.date),
+                                y: .value("値", dataPoint.value)
+                            )
+                            .foregroundStyle(metric.color)
+                            .interpolationMethod(.catmullRom)
 
-            PointMark(
-                x: .value("日時", dataPoint.date),
-                y: .value("値", dataPoint.value)
-            )
-            .foregroundStyle(by: .value("指標", dataPoint.metric))
-        }
-        .chartForegroundStyleScale([
-            ChartMetric.score.localizedName: ChartMetric.score.color,
-            ChartMetric.correctKeys.localizedName: ChartMetric.correctKeys.color,
-            ChartMetric.mistypes.localizedName: ChartMetric.mistypes.color,
-            ChartMetric.avgKeysPerSec.localizedName: ChartMetric.avgKeysPerSec.color,
-        ])
-        .chartLegend(position: .bottom)
-        .chartXAxis {
-            AxisMarks(values: .automatic) { _ in
-                AxisGridLine()
-                AxisTick()
-                AxisValueLabel(format: .dateTime.month().day())
+                            PointMark(
+                                x: .value("日時", dataPoint.date),
+                                y: .value("値", dataPoint.value)
+                            )
+                            .foregroundStyle(metric.color)
+                        }
+                        .chartXAxis {
+                            AxisMarks(values: .automatic) { _ in
+                                AxisGridLine()
+                                AxisTick()
+                                AxisValueLabel(format: .dateTime.month().day())
+                            }
+                        }
+                        .chartYAxis {
+                            AxisMarks(position: .leading)
+                        }
+                        .padding()
+                        .frame(height: 280)
+                    }
+                    .background(.background, in: RoundedRectangle(cornerRadius: 12))
+                }
             }
+            .padding()
         }
-        .chartYAxis {
-            AxisMarks(position: .leading)
-        }
-        .padding()
-        .frame(minHeight: 300)
     }
 
     private var statisticsSummary: some View {
         HStack(spacing: 24) {
-            ForEach(Array(selectedMetrics).sorted(by: { $0.localizedName < $1.localizedName })) { metric in
+            ForEach(ChartMetric.allCases) { metric in
                 let values = records.map { getValue(for: metric, from: $0) }
                 let avg = values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
                 let maxVal = values.max() ?? 0
