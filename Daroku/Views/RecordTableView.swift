@@ -3,17 +3,23 @@
 //  Daroku
 //
 
+import OSLog
 import SwiftUI
 
+/// 記録をテーブル形式で表示するビュー
 struct RecordTableView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var software: TypingSoftware
+
+    private static let logger = Logger(subsystem: "com.daroku", category: "RecordTableView")
 
     @State private var selection = Set<Record.ID>()
     @State private var showingAddSheet = false
     @State private var sortByDate = true
     @State private var sortAscending = false
 
+    /// ソート順に従ってソートされた記録の配列
+    /// - Complexity: O(n log n), where n is the number of records.
     private var records: [Record] {
         let recordSet = software.records as? Set<Record> ?? []
         return recordSet.sorted { r1, r2 in
@@ -105,11 +111,14 @@ struct RecordTableView: View {
         }
     }
 
+    /// 選択された記録を削除する
     private func deleteSelectedRecords() {
         deleteRecords(ids: selection)
         selection.removeAll()
     }
 
+    /// 指定されたIDの記録を削除する
+    /// - Parameter ids: 削除する記録のIDのセット
     private func deleteRecords(ids: Set<Record.ID>) {
         withAnimation {
             for record in records where ids.contains(record.id) {
@@ -118,7 +127,7 @@ struct RecordTableView: View {
             do {
                 try viewContext.save()
             } catch {
-                print("Failed to delete records: \(error)")
+                Self.logger.error("Failed to delete records: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

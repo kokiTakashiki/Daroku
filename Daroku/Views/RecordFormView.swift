@@ -3,12 +3,16 @@
 //  Daroku
 //
 
+import OSLog
 import SwiftUI
 
+/// 記録を追加・編集するフォームビュー
 struct RecordFormView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var software: TypingSoftware
+
+    private static let logger = Logger(subsystem: "com.daroku", category: "RecordFormView")
 
     @State private var date = Date()
     @State private var score: Double = 0
@@ -152,6 +156,7 @@ struct RecordFormView: View {
         .padding()
     }
 
+    /// カスタムフィールドを追加する
     private func addCustomField() {
         guard !newFieldName.isEmpty else { return }
         customFields.append((name: newFieldName, value: newFieldValue))
@@ -159,6 +164,7 @@ struct RecordFormView: View {
         newFieldValue = ""
     }
 
+    /// 記録を保存する
     private func saveRecord() {
         let record = Record(context: viewContext)
         record.id = UUID()
@@ -183,7 +189,7 @@ struct RecordFormView: View {
         do {
             try viewContext.save()
         } catch {
-            print("Failed to save record: \(error)")
+            Self.logger.error("Failed to save record: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

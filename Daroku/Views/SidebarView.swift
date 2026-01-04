@@ -3,27 +3,31 @@
 //  Daroku
 //
 
+import OSLog
 import SwiftUI
 
+/// サイドバービュー。タイピングソフトの一覧を表示する
 struct SidebarView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Binding var selectedSoftware: TypingSoftware?
+
+    private static let logger = Logger(subsystem: "com.daroku", category: "SidebarView")
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \TypingSoftware.createdAt, ascending: true)],
         animation: .default
     )
-    private var softwares: FetchedResults<TypingSoftware>
+    private var softwareList: FetchedResults<TypingSoftware>
 
     @State private var showingAddSheet = false
     @State private var newSoftwareName = ""
     @State private var newSoftwareUnit = ""
-    @State private var newSoftwareURL = ""
+    @State private var newSoftwareURLString = ""
 
     var body: some View {
         List(selection: $selectedSoftware) {
             Section("タイピングソフト") {
-                ForEach(softwares) { software in
+                ForEach(softwareList) { software in
                     NavigationLink(value: software) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(software.name ?? String(localized: "名称未設定"))
@@ -40,7 +44,7 @@ struct SidebarView: View {
                         }
                     }
                 }
-                .onDelete(perform: deleteSoftwares)
+                .onDelete(perform: deleteSoftware)
             }
         }
         .listStyle(.sidebar)
@@ -64,7 +68,7 @@ struct SidebarView: View {
             Form {
                 TextField("ソフト名", text: $newSoftwareName)
                 TextField("単位（例：円、点、WPM）", text: $newSoftwareUnit)
-                TextField("URL（任意）", text: $newSoftwareURL)
+                TextField("URL（任意）", text: $newSoftwareURLString)
             }
             .padding()
             .frame(width: 300, height: 200)
@@ -87,6 +91,7 @@ struct SidebarView: View {
         }
     }
 
+    /// 新しいタイピングソフトを追加する
     private func addSoftware() {
         withAnimation {
             let software = TypingSoftware(context: viewContext)
@@ -99,19 +104,22 @@ struct SidebarView: View {
                 try viewContext.save()
                 selectedSoftware = software
             } catch {
-                print("Failed to save software: \(error)")
+                Self.logger.error("Failed to save software: \(error.localizedDescription, privacy: .public)")
             }
 
             resetForm()
         }
     }
 
+    /// フォームをリセットする
     private func resetForm() {
         newSoftwareName = ""
         newSoftwareUnit = ""
-        newSoftwareURL = ""
+        newSoftwareURLString = ""
     }
 
+    /// タイピングソフトを削除する
+    /// - Parameter software: 削除するタイピングソフト
     private func deleteSoftware(_ software: TypingSoftware) {
         withAnimation {
             if selectedSoftware == software {
@@ -121,15 +129,17 @@ struct SidebarView: View {
             do {
                 try viewContext.save()
             } catch {
-                print("Failed to delete software: \(error)")
+                Self.logger.error("Failed to delete software: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
 
-    private func deleteSoftwares(at offsets: IndexSet) {
+    /// 指定されたインデックスのタイピングソフトを削除する
+    /// - Parameter offsets: 削除するタイピングソフトのインデックスのセット
+    private func deleteSoftware(at offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                let software = softwares[index]
+                let software = softwareList[index]
                 if selectedSoftware == software {
                     selectedSoftware = nil
                 }
@@ -138,7 +148,7 @@ struct SidebarView: View {
             do {
                 try viewContext.save()
             } catch {
-                print("Failed to delete softwares: \(error)")
+                Self.logger.error("Failed to delete software: \(error.localizedDescription, privacy: .public)")
             }
         }
     }

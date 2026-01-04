@@ -169,6 +169,8 @@ struct ImageOCRView: View {
 
     // MARK: - アクション
 
+    /// ドロップされたアイテムを処理する
+    /// - Parameter providers: ドロップされたアイテムのプロバイダーの配列
     private func handleDrop(providers: [NSItemProvider]) {
         guard let provider = providers.first else { return }
 
@@ -194,6 +196,7 @@ struct ImageOCRView: View {
         }
     }
 
+    /// 画像ファイルを選択する
     private func selectImageFile() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.image, .png, .jpeg, .heic]
@@ -209,6 +212,8 @@ struct ImageOCRView: View {
         }
     }
 
+    /// 画像からテキストを認識する
+    /// - Parameter image: テキストを認識する画像
     private func processImage(_ image: NSImage) async {
         droppedImage = image
         isProcessing = true
@@ -227,6 +232,10 @@ struct ImageOCRView: View {
         isProcessing = false
     }
 
+    /// テキストをクリップボードにコピーする
+    /// - Parameters:
+    ///   - text: コピーするテキスト
+    ///   - index: テキストのインデックス
     private func copyText(_ text: String, at index: Int) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
@@ -246,6 +255,7 @@ struct ImageOCRView: View {
         }
     }
 
+    /// すべてのテキストをクリップボードにコピーする
     private func copyAllTexts() {
         let allText = recognizedTexts.joined(separator: "\n")
         NSPasteboard.general.clearContents()

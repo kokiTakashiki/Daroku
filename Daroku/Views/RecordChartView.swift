@@ -6,10 +6,15 @@
 import Charts
 import SwiftUI
 
+/// グラフで表示する指標の列挙型
 enum ChartMetric: String, CaseIterable, Identifiable {
+    /// スコア
     case score
+    /// 正確キー数
     case correctKeys
+    /// ミスタイプ数
     case mistypes
+    /// 平均キータイプ数（回/秒）
     case avgKeysPerSec
 
     var id: String { rawValue }
@@ -42,6 +47,7 @@ enum ChartMetric: String, CaseIterable, Identifiable {
     }
 }
 
+/// グラフのデータポイント
 struct ChartDataPoint: Identifiable {
     let id = UUID()
     let date: Date
@@ -49,18 +55,24 @@ struct ChartDataPoint: Identifiable {
     let metric: String
 }
 
+/// 記録をグラフで表示するビュー
 struct RecordChartView: View {
     @ObservedObject var software: TypingSoftware
 
+    /// 日付順にソートされた記録の配列
+    /// - Complexity: O(n log n), where n is the number of records.
     private var records: [Record] {
         let recordSet = software.records as? Set<Record> ?? []
         return recordSet.sorted { ($0.date ?? .distantPast) < ($1.date ?? .distantPast) }
     }
 
+    /// 指定された指標のチャートデータを生成する
+    /// - Parameter metric: チャートに表示する指標
+    /// - Returns: 日付と値のペアを含むチャートデータポイントの配列
     private func chartData(for metric: ChartMetric) -> [ChartDataPoint] {
         records.compactMap { record in
             guard let date = record.date else { return nil }
-            let value = getValue(for: metric, from: record)
+            let value = value(for: metric, from: record)
             return ChartDataPoint(date: date, value: value, metric: metric.localizedName)
         }
     }
@@ -136,7 +148,7 @@ struct RecordChartView: View {
     private var statisticsSummary: some View {
         HStack(spacing: 24) {
             ForEach(ChartMetric.allCases) { metric in
-                let values = records.map { getValue(for: metric, from: $0) }
+                let values = records.map { value(for: metric, from: $0) }
                 let avg = values.isEmpty ? 0 : values.reduce(0, +) / Double(values.count)
                 let maxVal = values.max() ?? 0
                 let minVal = values.min() ?? 0
@@ -165,7 +177,12 @@ struct RecordChartView: View {
         .padding()
     }
 
-    private func getValue(for metric: ChartMetric, from record: Record) -> Double {
+    /// 記録から指定された指標の値を取得する
+    /// - Parameters:
+    ///   - metric: 取得する指標
+    ///   - record: 値を取得する記録
+    /// - Returns: 指標に対応する値
+    private func value(for metric: ChartMetric, from record: Record) -> Double {
         switch metric {
         case .score: record.score
         case .correctKeys: Double(record.correctKeys)
@@ -174,6 +191,11 @@ struct RecordChartView: View {
         }
     }
 
+    /// 値をフォーマットして文字列に変換する
+    /// - Parameters:
+    ///   - value: フォーマットする値
+    ///   - metric: 値の指標
+    /// - Returns: フォーマットされた文字列
     private func formatValue(_ value: Double, metric: ChartMetric) -> String {
         let unit = metric == .score ? (software.unit ?? String(localized: "点")) : metric.unit
         if metric == .avgKeysPerSec {
@@ -183,6 +205,7 @@ struct RecordChartView: View {
     }
 }
 
+/// 統計情報の表示コンポーネント
 struct StatItem: View {
     let label: String
     let value: String

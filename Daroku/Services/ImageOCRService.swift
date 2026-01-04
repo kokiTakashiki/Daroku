@@ -9,9 +9,13 @@ import Vision
 /// Vision frameworkを使用して画像からテキストを抽出するサービス
 @MainActor
 final class ImageOCRService {
+    /// OCR処理中に発生するエラー
     enum OCRError: LocalizedError {
+        /// 画像を読み込めなかった場合
         case invalidImage
+        /// テキスト認識に失敗した場合
         case recognitionFailed(Error)
+        /// テキストが見つからなかった場合
         case noTextFound
 
         var errorDescription: String? {

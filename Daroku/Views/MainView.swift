@@ -3,6 +3,7 @@
 //  Daroku
 //
 
+import OSLog
 import StoreKit
 import SwiftUI
 
@@ -23,6 +24,7 @@ enum TipProducts {
     static let all = [smallTip, mediumTip, largeTip]
 }
 
+/// アプリのメインビュー。サイドバーと詳細ビューを表示する
 struct MainView: View {
     @State private var selectedSoftware: TypingSoftware?
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
@@ -59,9 +61,11 @@ private struct SoftwareDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @ObservedObject var software: TypingSoftware
 
-    @State private var showingTable = true
+    private static let logger = Logger(subsystem: "com.daroku", category: "SoftwareDetailView")
+
+    @State private var isShowingTable = true
     @State private var showingURLEditPopover = false
-    @State private var editingURL = ""
+    @State private var editingURLString = ""
 
     var body: some View {
         let title = if let name = software.name {
@@ -70,12 +74,12 @@ private struct SoftwareDetailView: View {
             String(localized: "名称未設定")
         }
         VStack(spacing: 0) {
-            header()
+            makeHeader()
 
             Divider()
 
             // メインコンテンツ
-            if showingTable {
+            if isShowingTable {
                 RecordTableView(software: software)
             } else {
                 RecordChartView(software: software)
@@ -84,7 +88,9 @@ private struct SoftwareDetailView: View {
         .navigationTitle(title)
     }
 
-    private func header() -> some View {
+    /// ヘッダービューを構築する
+    /// - Returns: ソフトウェア情報と表示切り替えピッカーを含むヘッダービュー
+    private func makeHeader() -> some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text("単位: \(software.unit ?? String(localized: "点"))")
@@ -103,7 +109,7 @@ private struct SoftwareDetailView: View {
                                 .foregroundStyle(.secondary)
                         }
                         Button {
-                            editingURL = url
+                            editingURLString = url
                             showingURLEditPopover = true
                         } label: {
                             Image(systemName: "pencil")
@@ -117,7 +123,7 @@ private struct SoftwareDetailView: View {
                     }
                 } else {
                     Button {
-                        editingURL = ""
+                        editingURLString = ""
                         showingURLEditPopover = true
                     } label: {
                         HStack(spacing: 4) {
@@ -138,7 +144,7 @@ private struct SoftwareDetailView: View {
 
             Spacer()
 
-            Picker("", selection: $showingTable) {
+            Picker("", selection: $isShowingTable) {
                 Image(systemName: "list.bullet")
                     .tag(true)
                 Image(systemName: "chart.xyaxis.line")
@@ -150,19 +156,20 @@ private struct SoftwareDetailView: View {
         .background(.bar)
     }
 
+    /// URL編集用のポップオーバービュー
     @ViewBuilder
     private var urlEditPopover: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("URLを編集")
                 .font(.headline)
 
-            TextField("URL", text: $editingURL)
+            TextField("URL", text: $editingURLString)
                 .textFieldStyle(.roundedBorder)
 
             HStack {
                 Spacer()
                 Button("キャンセル") {
-                    editingURL = software.url ?? ""
+                    editingURLString = software.url ?? ""
                     showingURLEditPopover = false
                 }
                 .keyboardShortcut(.cancelAction)
@@ -177,23 +184,25 @@ private struct SoftwareDetailView: View {
         .padding()
         .frame(width: 300)
         .onAppear {
-            editingURL = software.url ?? ""
+            editingURLString = software.url ?? ""
         }
     }
 
+    /// 編集されたURLを保存する
     private func saveURL() {
-        software.url = editingURL.isEmpty ? nil : editingURL
+        software.url = editingURLString.isEmpty ? nil : editingURLString
 
         do {
             try viewContext.save()
         } catch {
-            print("Failed to save URL: \(error)")
+            Self.logger.error("Failed to save URL: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
 
 // MARK: - FooterView
 
+/// アプリのフッタービュー。ヘルプ、チップ、共有、フォロー、レビューへのリンクを表示する
 struct FooterView: View {
     var body: some View {
         HStack(spacing: 12) {
@@ -249,6 +258,7 @@ struct FooterView: View {
         .background(.bar)
     }
 
+    /// チップ購入ウィンドウを開く
     private func openTipWindow() {
         let tipWindow = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 400, height: 450),
@@ -263,11 +273,14 @@ struct FooterView: View {
         tipWindow.isReleasedWhenClosed = false
     }
 
+    /// 指定されたURLをデフォルトブラウザで開く
+    /// - Parameter urlString: 開くURLの文字列
     private func openURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         NSWorkspace.shared.open(url)
     }
 
+    /// App Storeのレビューページを開く
     private func openAppStoreReview() {
         // let urlString = "https://apps.apple.com/app/id\(AppLinks.appStoreID)?action=write-review"
         // openURL(urlString)
@@ -276,8 +289,9 @@ struct FooterView: View {
 
 // MARK: - HelpView
 
+/// ヘルプウィンドウを表示するビュー
 struct HelpView: View {
-    /// ヘルプウィンドウを開く（既に開いている場合は前面に表示）
+    /// ヘルプウィンドウを開く。既に存在する場合は前面に表示する
     @MainActor
     static func openWindow() {
         let helpTitle = String(localized: "ヘルプ")
@@ -402,15 +416,23 @@ struct HelpView: View {
 
 // MARK: - TipStore
 
+/// チップ購入を管理するObservableObject
 @MainActor
 class TipStore: ObservableObject {
     @Published private(set) var products: [Product] = []
     @Published private(set) var purchaseState: PurchaseState = .ready
 
+    private static let logger = Logger(subsystem: "com.daroku", category: "TipStore")
+
+    /// 購入状態を表す列挙型
     enum PurchaseState: Equatable {
+        /// 購入可能な状態。
         case ready
+        /// 購入処理中。
         case purchasing
+        /// 購入完了。
         case purchased
+        /// 購入失敗。エラーメッセージを含む。
         case failed(String)
     }
 
@@ -420,15 +442,18 @@ class TipStore: ObservableObject {
         }
     }
 
+    /// チップ商品の一覧を読み込む
     func loadProducts() async {
         do {
             products = try await Product.products(for: TipProducts.all)
             products.sort { $0.price < $1.price }
         } catch {
-            print("Failed to load products: \(error)")
+            Self.logger.error("Failed to load products: \(error.localizedDescription, privacy: .public)")
         }
     }
 
+    /// 指定された商品を購入する
+    /// - Parameter product: 購入する商品
     func purchase(_ product: Product) async {
         purchaseState = .purchasing
 
@@ -456,6 +481,7 @@ class TipStore: ObservableObject {
         }
     }
 
+    /// 購入状態を初期状態（ready）にリセットする
     func resetState() {
         purchaseState = .ready
     }
@@ -463,6 +489,7 @@ class TipStore: ObservableObject {
 
 // MARK: - TipView
 
+/// チップ購入UIを表示するビュー
 struct TipView: View {
     @StateObject private var store = TipStore()
 
@@ -561,6 +588,7 @@ struct TipView: View {
 
 // MARK: - TipButton
 
+/// チップ購入ボタンコンポーネント
 struct TipButton: View {
     let product: Product
     @ObservedObject var store: TipStore
