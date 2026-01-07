@@ -227,7 +227,6 @@ struct FooterView: View {
             } label: {
                 Text("🍵 Tip me")
             }
-            .buttonStyle(.plain)
 
             ShareLink(
                 item: URL(string: "https://example.com/daroku")!,
@@ -236,21 +235,18 @@ struct FooterView: View {
             ) {
                 Text("Share")
             }
-            .buttonStyle(.plain)
 
             Button {
                 openURL(AppLinks.followURL)
             } label: {
                 Text("Follow")
             }
-            .buttonStyle(.plain)
 
             Button {
                 openAppStoreReview()
             } label: {
                 Text("Review")
             }
-            .buttonStyle(.plain)
 
             Spacer()
         }

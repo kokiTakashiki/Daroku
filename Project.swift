@@ -6,6 +6,9 @@ let project = Project(
         disableBundleAccessors: true,
         disableSynthesizedResourceAccessors: true
     ),
+    packages: [
+        .package(path: "Packages/JSONHandler")
+    ],
     targets: [
         .target(
             name: "Daroku",
@@ -13,7 +16,9 @@ let project = Project(
             product: .app,
             bundleId: "com.kokiTakashiki.Daroku",
             deploymentTargets: .macOS("26.0"),
-            infoPlist: .extendingDefault(with: [:]),
+            infoPlist: .extendingDefault(with: [
+                "LSApplicationCategoryType": "public.app-category.education"
+            ]),
             sources: ["Daroku/**"],
             resources: [
                 "Daroku/Assets.xcassets",
@@ -22,13 +27,16 @@ let project = Project(
                 "Daroku.icon",
             ],
             entitlements: .file(path: "Daroku/Daroku.entitlements"),
+            dependencies: [
+                .package(product: "JSONHandler")
+            ],
             settings: .settings(
                 base: [
                     "SWIFT_VERSION": "6.0",
                     "ENABLE_HARDENED_RUNTIME": "YES",
                     "ENABLE_USER_SCRIPT_SANDBOXING": "YES",
                     "ENABLE_APP_SANDBOX": "YES",
-                    "STRING_CATALOG_GENERATE_SYMBOLS": "YES",
+                    "STRING_CATALOG_GENERATE_SYMBOL_EXTENSIONS": "YES",
                     "SWIFT_STRICT_CONCURRENCY": "complete",
                     "SWIFT_STRICT_MEMORY_SAFETY": "YES",
                     "ASSETCATALOG_COMPILER_APPICON_NAME": "Daroku",

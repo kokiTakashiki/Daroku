@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "0E0BEBB3-EAF6-4010-B4A1-50972C523BFD",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "JSONHandlerTests",
+        "name" : "JSONHandlerTests"
+      }
+    }
+  ],
+  "version" : 1
+}

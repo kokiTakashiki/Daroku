@@ -3,8 +3,11 @@
 //  Daroku
 //
 
+import AppKit
+import JSONHandler
 import OSLog
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// サイドバービュー。タイピングソフトの一覧を表示する
 struct SidebarView: View {
@@ -23,6 +26,43 @@ struct SidebarView: View {
     @State private var newSoftwareName = ""
     @State private var newSoftwareUnit = ""
     @State private var newSoftwareURLString = ""
+    @State private var showingImportError = false
+    @State private var importErrorMessage = ""
+
+    /// JSONファイルをインポートする
+    private func importJSON() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+
+        if panel.runModal() == .OK, let url = panel.url {
+            do {
+                let jsonData = try Data(contentsOf: url)
+
+                // JSONをデコード
+                guard let exportable = JSONImportService.importFromJSON(data: jsonData) else {
+                    importErrorMessage = String(localized: "JSONファイルの読み込みに失敗しました。ファイル形式を確認してください。")
+                    showingImportError = true
+                    return
+                }
+
+                // Core Dataにインポート
+                guard let importedSoftware = JSONImportExtensions.importToCoreData(exportable, into: viewContext) else {
+                    importErrorMessage = String(localized: "データのインポートに失敗しました。")
+                    showingImportError = true
+                    return
+                }
+
+                // インポート成功時は新しく作成されたソフトウェアを選択
+                selectedSoftware = importedSoftware
+            } catch {
+                Self.logger.error("Failed to read JSON file: \(error.localizedDescription, privacy: .public)")
+                importErrorMessage = String(localized: "ファイルの読み込みに失敗しました: \(error.localizedDescription)")
+                showingImportError = true
+            }
+        }
+    }
 
     var body: some View {
         List(selection: $selectedSoftware) {
@@ -51,8 +91,13 @@ struct SidebarView: View {
         .navigationSplitViewColumnWidth(min: 200, ideal: 250)
         .toolbar {
             ToolbarItem {
-                Button {
-                    showingAddSheet = true
+                Menu {
+                    Button("新規追加", systemImage: "plus") {
+                        showingAddSheet = true
+                    }
+                    Button("JSON Import", systemImage: "square.and.arrow.down") {
+                        importJSON()
+                    }
                 } label: {
                     Label("追加", systemImage: "plus")
                 }
@@ -60,6 +105,11 @@ struct SidebarView: View {
         }
         .sheet(isPresented: $showingAddSheet) {
             addSoftwareSheet
+        }
+        .alert("インポートエラー", isPresented: $showingImportError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(importErrorMessage)
         }
     }
 

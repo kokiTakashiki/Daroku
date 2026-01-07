@@ -3,6 +3,8 @@
 //  Daroku
 //
 
+import AppKit
+import JSONHandler
 import OSLog
 import SwiftUI
 
@@ -84,6 +86,19 @@ struct RecordTableView: View {
 
             // フッター
             HStack {
+                Button {
+                    exportToJSON()
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(.primary)
+                }
+                .buttonStyle(.plain)
+                .background(
+                    Circle()
+                        .fill(.quaternary)
+                )
+
                 Text("\(records.count) 件の記録")
                     .foregroundStyle(.secondary)
 
@@ -130,6 +145,38 @@ struct RecordTableView: View {
                 Self.logger.error("Failed to delete records: \(error.localizedDescription, privacy: .public)")
             }
         }
+    }
+
+    /// CoreDataのデータをJSON形式でエクスポートする
+    private func exportToJSON() {
+        guard let jsonData = JSONExportService.exportToJSON(software: software) else {
+            Self.logger.error("Failed to export JSON data")
+            return
+        }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.json]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = defaultExportFileName()
+
+        if panel.runModal() == .OK, let url = panel.url {
+            do {
+                try jsonData.write(to: url)
+                Self.logger.info("Successfully exported JSON to: \(url.path, privacy: .public)")
+            } catch {
+                Self.logger.error("Failed to write JSON file: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// デフォルトのエクスポートファイル名を生成する
+    /// - Returns: デフォルトファイル名（形式: [ソフトウェア名]_export_YYYY-MM-DD.json）
+    private func defaultExportFileName() -> String {
+        let softwareName = software.name ?? "unknown"
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: Date())
+        return "\(softwareName)_export_\(dateString).json"
     }
 }
 
