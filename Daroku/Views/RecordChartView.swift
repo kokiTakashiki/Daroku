@@ -208,7 +208,7 @@ struct RecordChartView: View {
     private func formatValue(_ value: Double, for metric: ChartMetric) -> String {
         let unit = metric == .score ? (software.unit ?? String(localized: "点")) : metric.unit
         if metric == .avgKeysPerSec {
-            return String(format: "%.1f %@", value, unit)
+            return "\(value.formatted(.number.precision(.fractionLength(1)))) \(unit)"
         }
         return "\(Int(value)) \(unit)"
     }

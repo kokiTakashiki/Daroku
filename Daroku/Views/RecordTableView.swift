@@ -59,7 +59,7 @@ struct RecordTableView: View {
                 .width(min: 80, ideal: 100)
 
                 TableColumn("平均速度") { record in
-                    Text(String(format: "%.1f 回/秒", record.avgKeysPerSec))
+                    Text("\(record.avgKeysPerSec.formatted(.number.precision(.fractionLength(1)))) 回/秒")
                         .monospacedDigit()
                 }
                 .width(min: 80, ideal: 100)

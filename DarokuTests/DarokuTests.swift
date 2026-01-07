@@ -54,9 +54,7 @@ struct DarokuTests {
         try context.save()
 
         // JSONエクスポートを実行
-        let jsonData = await MainActor.run {
-            JSONExportService.exportToJSON(software: software)
-        }
+        let jsonData = await JSONExportService.exportToJSON(software: software)
 
         // JSONデータが存在することを確認
         #expect(jsonData != nil, "JSONデータがnilです")
